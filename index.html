@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Aniversario Any</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0b020c;
+            background-image: radial-gradient(circle at 50% 50%, #200424 0%, #0b020c 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Estilos de la interfaz del candado */
+        .lock-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 30px 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 105, 180, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.8s ease-in-out;
+        }
+
+        .lock-container.fade-out {
+            opacity: 0;
+            transform: scale(0.9) translateY(-30px);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .lock-icon-wrapper {
+            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .lock-icon {
+            width: 50px;
+            height: 50px;
+            fill: #ff4d79;
+            filter: drop-shadow(0 0 8px rgba(255, 77, 121, 0.6));
+            transition: transform 0.3s ease;
+        }
+
+        .lock-icon-wrapper.unlock .lock-icon {
+            transform: translateY(-5px) scale(1.05);
+            fill: #4dff88;
+            filter: drop-shadow(0 0 12px rgba(77, 255, 136, 0.8));
+        }
+
+        h1 {
+            font-size: 24px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+            margin-bottom: 6px;
+        }
+
+        .sub-instruction {
+            font-size: 13px;
+            color: #b399b5;
+            font-weight: 300;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* Indicadores de PIN */
+        .pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 105, 180, 0.4);
+            border-radius: 50%;
+            transition: all 0.2s ease;
+        }
+
+        .dot.active {
+            background-color: #ff4d79;
+            border-color: #ff4d79;
+            box-shadow: 0 0 10px #ff4d79;
+            transform: scale(1.1);
+        }
+
+        .dot.error {
+            background-color: #ff3333;
+            border-color: #ff3333;
+            box-shadow: 0 0 10px #ff3333;
+            animation: shake 0.15s ease-in-out 2;
+        }
+
+        /* Teclado numérico */
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 500;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            margin: 0 auto;
+            transition: all 0.1s ease;
+        }
+
+        .key:active {
+            background: rgba(255, 105, 180, 0.3);
+            border-color: #ff4d79;
+            box-shadow: 0 0 12px rgba(255, 77, 121, 0.4);
+            transform: scale(0.92);
+        }
+
+        /* Contenedor de la carta (Oculto al inicio) */
+        .content-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            background: rgba(15, 5, 18, 0.85);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            opacity: 0;
+            transform: scale(0.95) translateY(30px);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            display: none;
+            text-align: center;
+        }
+
+        .content-container.fade-in {
+            display: block;
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto;
+        }
+
+        .heart-badge {
+            font-size: 35px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .romantic-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #f3e8f4;
+            white-space: pre-line;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        /* Efecto lluvia de corazones */
+        .heart-particle {
+            position: fixed;
+            color: #ff4d79;
+            font-size: 20px;
+            pointer-events: none;
+            z-index: 999;
+            animation: floatUp 3s linear forwards;
+        }
+
+        /* Animaciones */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); filter: drop-shadow(0 0 8px #ff4d79); }
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) translateX(var(--randomX)) rotate(360deg); opacity: 0; }
+        }
+
+        /* Botón siguiente */
+        .next-btn {
+            margin-top: 22px;
+            padding: 13px 38px;
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ff4d79, #c2185b);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 77, 121, 0.4);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .next-btn:hover { box-shadow: 0 8px 26px rgba(255, 77, 121, 0.6); }
+        .next-btn:active { transform: scale(0.95); }
+        .next-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+        /* Galería 3D */
+        .content-container.wide { max-width: 560px; padding: 24px 12px 30px; }
+        .gallery-hint { font-size: 13px; color: #b399b5; margin: 4px 0 6px; }
+        .stage {
+            position: relative;
+            height: 300px;
+            perspective: 900px;
+            overflow: hidden;
+            touch-action: pan-y;
+            user-select: none;
+        }
+        .photo {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 160px;
+            height: 215px;
+            padding: 7px 7px 30px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.6s ease, filter 0.6s ease;
+        }
+        .photo img, .photo .ph {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 44px;
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+        .photo.active { box-shadow: 0 0 0 2px #ff4d79, 0 14px 35px rgba(255, 77, 121, 0.45); }
+        .gallery-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        .arrow {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 105, 180, 0.5);
+            background: rgba(255, 77, 121, 0.15);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .arrow:active { background: rgba(255, 77, 121, 0.5); }
+        .arrow:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .counter { font-size: 14px; color: #f3e8f4; min-width: 56px; }
+        @media (prefers-reduced-motion: reduce) {
+            .photo { transition: none; }
+            .heart-badge { animation: none; }
+        }
+
+        /* Final con fuegos artificiales */
+        #fireworks {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+        #fireworks.on { opacity: 1; }
+        .content-container.final {
+            position: relative;
+            z-index: 2;
+            background: rgba(11, 2, 12, 0.35);
+            padding: 22px;
+        }
+        .final-photo {
+            background: #fff;
+            padding: 8px 8px 8px;
+            border-radius: 10px;
+            box-shadow: 0 0 40px rgba(255, 77, 121, 0.5);
+        }
+        .final-photo img {
+            display: block;
+            width: 100%;
+            max-height: 55vh;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .final-phrase {
+            margin-top: 20px;
+            font-size: 22px;
+            line-height: 1.4;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 0 14px rgba(255, 77, 121, 0.8);
+        }
+
+        /* Música */
+        .music-btn {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 1000;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 105, 180, 0.5);
+            background: rgba(11, 2, 12, 0.6);
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            display: none;
+        }
+        .music-btn.show { display: block; }
+        .music-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE BLOQUEO -->
+    <div class="lock-container" id="lockScreen">
+        <div class="lock-icon-wrapper" id="lockWrapper">
+            <svg class="lock-icon" viewBox="0 0 24 24" id="lockIcon">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+            </svg>
+        </div>
+        <h1>Feliz Aniversario Any</h1>
+        <p class="sub-instruction">Para empezar ingrese como se escribe te amo con números</p>
+        
+        <div class="pin-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="keyboard">
+            <div class="key" onclick="pressKey('1')">1</div>
+            <div class="key" onclick="pressKey('2')">2</div>
+            <div class="key" onclick="pressKey('3')">3</div>
+            <div class="key" onclick="pressKey('4')">4</div>
+            <div class="key" onclick="pressKey('5')">5</div>
+            <div class="key" onclick="pressKey('6')">6</div>
+            <div class="key" onclick="pressKey('7')">7</div>
+            <div class="key" onclick="pressKey('8')">8</div>
+            <div class="key" onclick="pressKey('9')">9</div>
+            <div class="key" onclick="pressKey('C')">C</div>
+            <div class="key" onclick="pressKey('0')">0</div>
+            <div class="key" onclick="pressKey('⌫')">⌫</div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO DE LA CARTA (SE REVELA AL DESBLOQUEAR) -->
+    <div class="content-container" id="contentScreen">
+        <div class="heart-badge">❤️</div>
+        <h1>Mi querida Any</h1>
+        <div class="romantic-text">
+            Hoy cumplimos un mes desde el día que decidimos poner un candado en Puerto Madero,
+            
+            pero los dos pensamos que los sentimientos se dan con el tiempo, 
+            
+            así que vamos a ir un poco más lento.
+        </div>
+        <button class="next-btn" onclick="goTo('contentScreen', 'galleryScreen')">Siguiente</button>
+    </div>
+
+    <!-- NIVEL 2: GALERÍA DE FOTOS -->
+    <div class="content-container wide" id="galleryScreen">
+        <h1>Nuestros momentos</h1>
+        <p class="gallery-hint">Deslizá, usá las flechas o tocá la foto principal para ampliarla</p>
+        <div class="stage" id="stage"></div>
+        <div class="gallery-controls">
+            <button class="arrow" id="prevBtn" aria-label="Foto anterior">&#10094;</button>
+            <span class="counter" id="counter"></span>
+            <button class="arrow" id="nextPhotoBtn" aria-label="Foto siguiente">&#10095;</button>
+        </div>
+        <button class="next-btn" onclick="goTo('galleryScreen', 'textScreen1')">Siguiente</button>
+    </div>
+
+    <!-- NIVEL 3: PRIMER MENSAJE -->
+    <div class="content-container" id="textScreen1">
+        <div class="heart-badge">💌</div>
+        <div class="romantic-text">Por mi parte te amo y te agradezco que volvieras a mi vida, sos una persona maravillosa, con solo ser vos misma haces un montón en mi vida y voy a esperarte todo el tiempo que necesites.
+
+Mi único objetivo en esta vida es hacer todo lo que te saque una sonrisa y te haga feliz.</div>
+        <button class="next-btn" onclick="goTo('textScreen1', 'textScreen2')">Siguiente</button>
+    </div>
+
+    <!-- NIVEL 4: SEGUNDO MENSAJE -->
+    <div class="content-container" id="textScreen2">
+        <div class="heart-badge">💞</div>
+        <div class="romantic-text">Después de varias citas entendí que el mejor plan es pasar el día a tu lado, el lugar puede ser cualquier lugar.
+
+El futuro depende de los dos, podemos ayudarnos y comprendernos.
+
+Quiero que sepas que sos lo más importante para mí y, de nuevo, quiero decirte gracias por volver a mi vida.</div>
+        <button class="next-btn" onclick="goTo('textScreen2', 'finalScreen')">Siguiente</button>
+    </div>
+
+    <!-- NIVEL 5: FINAL CON FUEGOS ARTIFICIALES -->
+    <canvas id="fireworks"></canvas>
+    <div class="content-container final" id="finalScreen">
+        <div class="final-photo"><img src="multimedia/a33.jpg" alt="Nosotros"></div>
+        <p class="final-phrase">El futuro lo construimos juntos</p>
+    </div>
+
+    <audio id="bgm" src="multimedia/bella.mp3" loop preload="auto"></audio>
+    <button class="music-btn" id="musicBtn" aria-label="Silenciar o activar la música">🔊</button>
+
+    <script src="script.js"></script>
+</body>
+</html>
